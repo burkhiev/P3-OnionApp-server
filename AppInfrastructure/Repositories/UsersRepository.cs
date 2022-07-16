@@ -1,6 +1,7 @@
 ﻿using AppDomain.Entities;
 using AppDomain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace AppInfrastructure.Database.Repositories
 {
@@ -56,6 +57,17 @@ namespace AppInfrastructure.Database.Repositories
         {
             var removedUserEntry = _db.Users.Remove(user);
             return removedUserEntry.Entity;
+        }
+
+        public IQueryable<User> FindByCondition(Expression<Func<User, bool>> condition, CancellationToken cancellationToken = default)
+        {
+            var users = _db.Users.Where(condition);
+            return users;
+        }
+
+        public void RemoveRange(User[] entities)
+        {
+            _db.Users.RemoveRange(entities);
         }
     }
 }

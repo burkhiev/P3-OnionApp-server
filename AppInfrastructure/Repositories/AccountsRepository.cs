@@ -1,5 +1,6 @@
 ﻿using AppDomain.Entities;
 using AppDomain.Repositories;
+using System.Linq.Expressions;
 
 namespace AppInfrastructure.Database.Repositories
 {
@@ -21,6 +22,12 @@ namespace AppInfrastructure.Database.Repositories
             return account;
         }
 
+        public IQueryable<Account> FindByCondition(Expression<Func<Account, bool>> condition, CancellationToken cancellationToken = default)
+        {
+            var accounts = _db.Accounts.Where(condition);
+            return accounts;
+        }
+
         public async Task<Account> AddAsync(Account account, CancellationToken cancellationToken = default)
         {
             var accountEntry = await _db.AddAsync(account, cancellationToken);
@@ -37,6 +44,11 @@ namespace AppInfrastructure.Database.Repositories
         {
             var removedAccountEntry = _db.Remove(account);
             return removedAccountEntry.Entity;
+        }
+
+        public void RemoveRange(Account[] entities)
+        {
+            _db.RemoveRange(entities);
         }
     }
 }

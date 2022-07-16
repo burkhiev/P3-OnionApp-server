@@ -8,9 +8,10 @@ namespace AppService.Abstractions
     public interface IUserService
     {
         Task<UserDto?> FindByIdAsync(Guid userId, CancellationToken cancellationToken = default);
-        Task<IEnumerable<UserDto>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<IQueryable<UserDto>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<UserDto> UpdateAsync(Guid userId, UserDto userDto, CancellationToken cancellationToken = default);
 
         Task<UserDto?> DeleteAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task DeleteRangeAsync(Guid[] usersIds, CancellationToken cancellationToken = default);
     }
 }

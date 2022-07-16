@@ -8,7 +8,6 @@ namespace AppDomain.Entities
         public string Password { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.MinValue;
         public string? AccountType { get; set; } = string.Empty;
-        public Guid UserId { get; set; }
         public virtual User User { get; set; }
     }
 }

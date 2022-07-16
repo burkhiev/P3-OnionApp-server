@@ -1,15 +1,17 @@
 ﻿using AppDomain.Entities;
 using AppService.Dtos.Accounts;
-using AppService.Dtos.Users;
+using System.Linq.Expressions;
 
 namespace AppService.Abstractions
 {
     public interface IAccountService
     {
-        Task<AccountDto> CreateAsync(AccountCreatingDto dto, CancellationToken cancellationToken = default);
-        Task<AccountDto?> DeleteAsync(Guid accountId, CancellationToken cancellationToken = default);
-        Task<AccountDto?> FindByIdAsync(Guid accountId, CancellationToken cancellationToken = default);
-        Task<IEnumerable<AccountDto>> GetAllAsync(CancellationToken cancellationToken = default);
-        Task<AccountDto> UpdateAsync(Guid accountId, AccountUpdatingDto accountDto, CancellationToken cancellationToken = default);
+        Task<AccountDto> CreateAsync(AccountCreatingDto dto, CancellationToken ct = default);
+        Task<AccountDto?> DeleteAsync(Guid accountId, CancellationToken ct = default);
+        Task<AccountDto?> FindByIdAsync(Guid accountId, CancellationToken ct = default);
+        Task<AccountFullDtoWithoutIncludes> FindByIdFullWithoutIncludes(Guid accountId, CancellationToken ct = default);
+        Task<IQueryable<AccountDto>> GetAllAsync(CancellationToken ct = default);
+        Task<AccountDto> UpdateAsync(Guid accountId, AccountUpdatingDto accountDto, CancellationToken ct = default);
+        Task DeleteRangeAsync(Guid[] accountsIds, CancellationToken ct = default);
     }
 }

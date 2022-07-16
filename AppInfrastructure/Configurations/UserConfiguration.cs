@@ -23,6 +23,12 @@ namespace AppInfrastructure.Database.Configurations
 
             builder.Property(x => x.LastName)
                 .HasMaxLength(MAX_USER_LASTNAME_LENGTH);
+
+            builder.HasOne(u => u.Account)
+                .WithOne(a => a.User)
+                .HasForeignKey<User>(u => u.AccountId);
+
+            builder.Property(x => x.AccountId).IsRequired();
         }
     }
 }

@@ -17,6 +17,9 @@ namespace AppService.Mappers
                 CreateAccountMappers(config);
             });
         }
+
+        public static MapperConfiguration MapperConfiguration => _mapperConfig;
+
         public static IMapper Mapper
         {
             get
@@ -39,8 +42,10 @@ namespace AppService.Mappers
 
         private static void CreateAccountMappers(IMapperConfigurationExpression config)
         {
+            config.CreateMap<AccountDto, Account>().ReverseMap();
             config.CreateMap<AccountCreatingDto, Account>().ReverseMap();
             config.CreateMap<AccountCreatingDto, User>().ReverseMap();
+            config.CreateMap<Account, AccountFullDtoWithoutIncludes>().ReverseMap();
         }
     }
 }
