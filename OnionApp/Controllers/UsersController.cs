@@ -1,4 +1,14 @@
-﻿using AppService.Abstractions;
+﻿// ***** Notes *****
+//
+//   Возможность удаления сущностей User в контроллере отсутствует.
+// Удаление предусмотрено только, при удалении связанной с User сущности Account.
+//
+//   Сама логика разделения данных выглядела весьма привлекающей перед написанием
+// данного учебного решения, но на практике выяснилось, что будет лучше,
+// если в будущем подобные сущности я буду объединять в одну.
+//
+
+using AppService.Abstractions;
 using AppService.Dtos.Users;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +31,8 @@ namespace OnionApp.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsers(CancellationToken cancellationToken = default)
         {
-            var usersDtos = await _serviceManager.UserService.GetAllAsync(cancellationToken);
+            var qUsersDtos = await _serviceManager.UserService.GetAllAsync(cancellationToken);
+            var usersDtos = qUsersDtos.ToList();
 
             return Ok(usersDtos);
         }
@@ -37,17 +48,20 @@ namespace OnionApp.Controllers
         [HttpPut("{userId:guid}")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromBody] UserDto userDto, CancellationToken cancellationToken = default)
         {
-            await _serviceManager.UserService.UpdateAsync(userId, userDto, cancellationToken);
+            var validationResult = _userDtoValidator.Validate(userDto);
 
-            return NoContent();
-        }
+            if (validationResult.IsValid)
+            {
+                await _serviceManager.UserService.UpdateAsync(userId, userDto, cancellationToken);
+                return NoContent();
+            }
 
-        [HttpDelete("{userId:guid}")]
-        public async Task<IActionResult> DeleteUserById(Guid userId, CancellationToken cancellationToken = default)
-        {
-            await _serviceManager.UserService.DeleteAsync(userId, cancellationToken);
+            foreach(var error in validationResult.Errors)
+            {
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            }
 
-            return NoContent();
+            return BadRequest(ModelState);
         }
     }
 }

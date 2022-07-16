@@ -5,6 +5,7 @@ using AppService.Dtos.Accounts;
 using AppService.Services;
 using Bogus;
 using OnionApp.Tests.Data;
+using OnionApp.Tests.Exceptions;
 using System;
 using System.Linq;
 using System.Security.Principal;
@@ -16,28 +17,27 @@ namespace OnionApp.Tests.Services
     public class AccountServiceTests : IClassFixture<ServiceManagerFixture>, IDisposable
     {
         private readonly ServiceManagerFixture _fixture;
-        private readonly Faker _faker;
+        private readonly Faker _faker = new Faker("ru");
 
         public AccountServiceTests(ServiceManagerFixture fixture)
         {
             _fixture = fixture;
-            _faker = new Faker("ru");
             _fixture.Initialize();
 
             if(_fixture.DbContext.Users.Count() != ServiceManagerFixture.FAKE_ACCOUNTS_COUNT)
             {
-                throw new InvalidProgramException();
+                throw new InvalidFixtureDataException();
             }
 
             if(_fixture.DbContext.Accounts.Count() != ServiceManagerFixture.FAKE_ACCOUNTS_COUNT)
             {
-                throw new InvalidProgramException();
+                throw new InvalidFixtureDataException();
             }
         }
 
-        public async void Dispose()
+        public void Dispose()
         {
-            await _fixture.Reset();
+            _fixture.Reset();
         }
 
         public RepositoryDbContext Db => _fixture.DbContext;

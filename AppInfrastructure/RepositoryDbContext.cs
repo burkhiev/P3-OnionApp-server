@@ -5,8 +5,8 @@ namespace AppInfrastructure.Database
 {
     public class RepositoryDbContext : DbContext
     {
-        public RepositoryDbContext() { }
-        public RepositoryDbContext(DbContextOptions options) : base(options) { }
+        public RepositoryDbContext(DbContextOptions options) : base(options) 
+        { }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }

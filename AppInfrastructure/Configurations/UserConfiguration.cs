@@ -1,6 +1,9 @@
 ﻿using AppDomain.Entities;
+using AppInfrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using AppInfrastructure.Utilities;
+using NodaTime;
 
 namespace AppInfrastructure.Database.Configurations
 {
@@ -24,11 +27,18 @@ namespace AppInfrastructure.Database.Configurations
             builder.Property(x => x.LastName)
                 .HasMaxLength(MAX_USER_LASTNAME_LENGTH);
 
+            builder.Property(x => x.DateOfBirth)
+                .HasConversion<Instant?>(
+                    dateTime => dateTime.HasValue ? dateTime.Value.ToInstant() : null,
+                    instant => instant.HasValue ? instant.Value.ToDateTimeUtc() : null);
+
             builder.HasOne(u => u.Account)
                 .WithOne(a => a.User)
                 .HasForeignKey<User>(u => u.AccountId);
 
             builder.Property(x => x.AccountId).IsRequired();
+
+            builder.HasData(DataInitializer.Users);
         }
     }
 }

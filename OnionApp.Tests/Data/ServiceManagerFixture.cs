@@ -6,7 +6,7 @@ using Bogus;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace OnionApp.Tests.Data
 {
@@ -53,8 +53,10 @@ namespace OnionApp.Tests.Data
 
         public void Initialize()
         {
-            _db.Database.EnsureDeleted();
-            _db.Database.EnsureCreated();
+            _db.Accounts.Load();
+            _db.Accounts.RemoveRange(_db.Accounts.ToList());
+            _db.SaveChanges();
+
 
             var accounts = new List<Account>(FAKE_ACCOUNTS_COUNT);
 
@@ -79,11 +81,11 @@ namespace OnionApp.Tests.Data
             _db.SaveChanges();
         }
 
-        public async Task Reset()
+        public void Reset()
         {
-            _db.Database.EnsureDeleted();
-            var users = await _db.Users.ToListAsync();
-            _db.Users.RemoveRange(users);
+            _db.Accounts.Load();
+            _db.Accounts.RemoveRange(_db.Accounts.ToList());
+            _db.SaveChanges();
         }
 
         public void Dispose()

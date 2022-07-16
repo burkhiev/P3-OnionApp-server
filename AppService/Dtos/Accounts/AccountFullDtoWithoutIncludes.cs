@@ -1,6 +1,4 @@
-﻿using AppDomain.Entities;
-
-namespace AppService.Dtos.Accounts
+﻿namespace AppService.Dtos.Accounts
 {
     public class AccountFullDtoWithoutIncludes
     {

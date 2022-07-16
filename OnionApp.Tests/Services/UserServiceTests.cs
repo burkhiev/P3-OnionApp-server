@@ -1,9 +1,12 @@
 ﻿using AppDomain.Exceptions.Users;
 using AppInfrastructure.Database;
+using AppInfrastructure.Utilities;
 using AppService.Dtos.Users;
 using AppService.Services;
 using Bogus;
+using NodaTime;
 using OnionApp.Tests.Data;
+using OnionApp.Tests.Exceptions;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +23,16 @@ namespace OnionApp.Tests.Services
         {
             _fixture = fixture;
             _fixture.Initialize();
+
+            if(_fixture.DbContext.Users.Count() != ServiceManagerFixture.FAKE_ACCOUNTS_COUNT)
+            {
+                throw new InvalidFixtureDataException();
+            }
+
+            if(_fixture.DbContext.Accounts.Count() != ServiceManagerFixture.FAKE_ACCOUNTS_COUNT)
+            {
+                throw new InvalidFixtureDataException();
+            }
         }
 
         public void Dispose()
@@ -91,7 +104,7 @@ namespace OnionApp.Tests.Services
 
             string newFirstName = Guid.NewGuid().ToString();
             string newLastName = Guid.NewGuid().ToString();
-            DateTime newBirthDate = _faker.Date.Past(2);
+            var newBirthDate = _faker.Date.Past(2);
 
             UserDto userDto = usersDto.First();
             userDto.FirstName = newFirstName;

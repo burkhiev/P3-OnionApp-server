@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContextPool<RepositoryDbContext>(optionsBuilder =>
 {
     string connectionString = builder.Configuration.GetConnectionString("Npsql");
-    optionsBuilder.UseNpgsql(connectionString);
+    optionsBuilder.UseNpgsql(connectionString, options => options.UseNodaTime());
 });
 
 builder.Services.AddAutoMapper(typeof(Program).Assembly);

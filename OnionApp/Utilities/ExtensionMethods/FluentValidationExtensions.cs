@@ -14,7 +14,9 @@ namespace OnionApp.Utilities.ExtensionMethods
         /// </param>
         public static void AddDtoValidationServices(this IServiceCollection services)
         {
-            services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+            // .AddValidatorsFromAssembly() не рекомендуется (по документации).
+            //services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
             services.AddTransient<IValidator<UserDto>, UserDtoValidator>();
         }
     }
