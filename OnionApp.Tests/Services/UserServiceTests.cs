@@ -1,12 +1,10 @@
 ﻿using AppDomain.Exceptions.Users;
 using AppInfrastructure.Database;
-using AppInfrastructure.Utilities;
 using AppService.Dtos.Users;
 using AppService.Services;
 using Bogus;
-using NodaTime;
 using OnionApp.Tests.Data;
-using OnionApp.Tests.Exceptions;
+using OnionApp.Tests.TestExceptions;
 using System;
 using System.Linq;
 using System.Threading.Tasks;

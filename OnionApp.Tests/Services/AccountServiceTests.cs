@@ -1,14 +1,12 @@
-﻿using AppDomain.Entities;
-using AppDomain.Exceptions.Accounts;
+﻿using AppDomain.Exceptions.Accounts;
 using AppInfrastructure.Database;
 using AppService.Dtos.Accounts;
 using AppService.Services;
 using Bogus;
 using OnionApp.Tests.Data;
-using OnionApp.Tests.Exceptions;
+using OnionApp.Tests.TestExceptions;
 using System;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading.Tasks;
 using Xunit;
 

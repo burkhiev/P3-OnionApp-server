@@ -92,7 +92,6 @@ namespace OnionApp.Tests.Data
         {
             _db.Database.EnsureDeleted();
             _db.Dispose();
-            _serviceManager.Dispose();
         }
     }
 }

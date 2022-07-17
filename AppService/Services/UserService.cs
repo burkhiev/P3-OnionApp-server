@@ -38,6 +38,11 @@ namespace AppService.Services
 
         public async Task<UserDto> UpdateAsync(Guid userId, UserDto userDto, CancellationToken cancellationToken)
         {
+            if(userId != userDto.Id)
+            {
+                throw new UserUpdateInvalidArgumentException(nameof(userId), userId);
+            }
+
             var user = await _repositoryManager.UsersRepository.FindByIdAsync(userId);
 
             if(user == null)

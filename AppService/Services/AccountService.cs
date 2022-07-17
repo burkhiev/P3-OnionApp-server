@@ -87,7 +87,7 @@ namespace AppService.Services
         {
             if(accountId == Guid.Empty || accountDto.AccountId != accountId)
             {
-                throw new AccountInvalidDataForUpdateException(accountId);
+                throw new AccountInvalidArgumentForUpdateException(accountId);
             }
 
             var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, ct);

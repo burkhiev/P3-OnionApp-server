@@ -2,7 +2,7 @@
 
 namespace AppService.Abstractions
 {
-    public interface IBusinessServiceManager : IUnitOfWork, IDisposable
+    public interface IBusinessServiceManager : IUnitOfWork
     {
         IAccountService AccountService { get; }
         IUserService UserService { get; }
