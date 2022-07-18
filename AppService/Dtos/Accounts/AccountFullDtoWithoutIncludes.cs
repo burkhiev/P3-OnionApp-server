@@ -1,6 +1,6 @@
 ﻿namespace AppService.Dtos.Accounts
 {
-    public class AccountFullDtoWithoutIncludes
+    public class AccountFullDtoWithoutIncludes : DtoBase
     {
         public Guid Id { get; set; }
         public string Email { get; set; } = string.Empty;

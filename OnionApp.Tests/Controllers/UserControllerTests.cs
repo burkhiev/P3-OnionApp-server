@@ -6,20 +6,20 @@ using Bogus;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnionApp.Controllers;
-using OnionApp.Tests.Data;
+using OnionApp.Tests.Fixtures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using OnionApp.Middlewares;
-using OnionApp.Tests.TestExceptions;
+using OnionApp.Tests.Exceptions;
 
 namespace OnionApp.Tests.Controllers
 {
     public class UserControllerTests : IClassFixture<ServiceManagerFixture>, IDisposable
     {
-        private readonly Faker _faker;
+        private readonly Faker _faker = new Faker();
         private readonly ServiceManagerFixture _fixture;
         private readonly UsersController _controller;
 
@@ -33,7 +33,6 @@ namespace OnionApp.Tests.Controllers
                 throw new InvalidFixtureDataException();
             }
 
-            _faker = new Faker();
             _controller = new UsersController(ServiceManager);
         }
 

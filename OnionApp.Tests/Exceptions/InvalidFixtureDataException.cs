@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OnionApp.Tests.TestExceptions
+namespace OnionApp.Tests.Exceptions
 {
     internal class InvalidFixtureDataException : InvalidOperationException
     {

@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OnionApp.Tests.Data
+namespace OnionApp.Tests.Fixtures
 {
     public class ServiceManagerFixture : IDisposable
     {

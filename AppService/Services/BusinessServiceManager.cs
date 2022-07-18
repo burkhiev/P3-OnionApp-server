@@ -24,24 +24,5 @@ namespace AppService.Services
         {
             return _repositoryManager.SaveChangesAsync(cancellationToken);
         }
-
-        //private void Dispose(bool disposing)
-        //{
-        //    if(!disposedValue)
-        //    {
-        //        if(disposing)
-        //        {
-        //            _repositoryManager.Dispose();
-        //        }
-
-        //        disposedValue = true;
-        //    }
-        //}
-
-        //public void Dispose()
-        //{
-        //    Dispose(disposing: true);
-        //    GC.SuppressFinalize(this);
-        //}
     }
 }

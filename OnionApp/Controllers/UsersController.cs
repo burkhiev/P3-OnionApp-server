@@ -1,14 +1,4 @@
-﻿// ***** Notes *****
-//
-//   Возможность удаления сущностей User в контроллере отсутствует.
-// Удаление предусмотрено только, при удалении связанной с User сущности Account.
-//
-//   Сама логика разделения данных выглядела весьма привлекающей перед написанием
-// данного учебного решения, но на практике выяснилось, что будет лучше,
-// если в будущем подобные сущности я буду объединять в одну.
-//
-
-using AppService.Abstractions;
+﻿using AppService.Abstractions;
 using AppService.Dtos.Users;
 using Microsoft.AspNetCore.Mvc;
 using OnionApp.Filters;
@@ -20,6 +10,7 @@ namespace OnionApp.Controllers
     [ApiController]
     [Route("api/users")]
     [ProducesResponseType(typeof(ClientErrorResponse), StatusCodes.Status400BadRequest, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(ClientErrorResponse), StatusCodes.Status500InternalServerError, MediaTypeNames.Application.Json)]
     public class UsersController : Controller
     {
         private readonly IBusinessServiceManager _serviceManager;
@@ -48,6 +39,7 @@ namespace OnionApp.Controllers
         /// </summary>
         /// <param name="userId">User ID (Guid).</param>
         /// <returns>Specified ID user's data.</returns>
+        /// <response code="404">Not Found. If user with specified ID doesn't exist.</response>
         [HttpGet("{userId:guid}")]
         [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(NotFoundResult), StatusCodes.Status404NotFound, MediaTypeNames.Text.Plain)]
@@ -69,7 +61,6 @@ namespace OnionApp.Controllers
         /// <param name="userId">User ID (Guid).</param>
         /// <param name="userDto">Object which contain user's data for update.</param>
         /// <returns>Updated user's data.</returns>
-        /// <response code="200">qwerty</response>
         /// <response code="400">WTF</response>
         [HttpPut("{userId:guid}")]
         [TypeFilter(typeof(UserDtosValidationFilterAttribute))]

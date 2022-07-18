@@ -6,7 +6,6 @@ using AppService.Dtos.Accounts;
 using AppService.Mappers;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using System.Linq.Expressions;
 
 namespace AppService.Services
 {

@@ -9,10 +9,11 @@ namespace AppInfrastructure.Database.Configurations
 {
     public sealed class UserConfiguration : IEntityTypeConfiguration<User>
     {
-        public static int MAX_USER_FIRSTNAME_LENGTH = 100;
-        public static int MIN_USER_FIRSTNAME_LENGTH = 2;
-        public static int MAX_USER_LASTNAME_LENGTH = 100;
-        public static int MIN_USER_LASTNAME_LENGTH = 2;
+        public const int MAX_USER_FIRSTNAME_LENGTH = 100;
+        public const int MIN_USER_FIRSTNAME_LENGTH = 2;
+        public const int MAX_USER_LASTNAME_LENGTH = 100;
+        public const int MIN_USER_LASTNAME_LENGTH = 2;
+        public const int MAX_NEW_USER_AGE = 200;
 
         public void Configure(EntityTypeBuilder<User> builder)
         {
