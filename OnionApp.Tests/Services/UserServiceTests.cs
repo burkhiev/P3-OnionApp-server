@@ -1,25 +1,36 @@
-﻿using AppInfrastructure.Database;
+﻿using AppDomain.Exceptions.Users;
+using AppInfrastructure.Database;
 using AppService.Dtos.Users;
 using AppService.Services;
 using Bogus;
-using OnionApp.Tests.Data;
+using OnionApp.Tests.Fixtures;
+using OnionApp.Tests.Exceptions;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace OnionApp.Tests.Repositories.Users
+namespace OnionApp.Tests.Services
 {
-    public class UserServiceTests : IClassFixture<ServiceManagerForUsersFixture>, IDisposable
+    public class UserServiceTests : IClassFixture<ServiceManagerFixture>, IDisposable
     {
-        private readonly Random _rnd = new Random(Guid.NewGuid().ToByteArray().Sum(x => x));
-        private readonly ServiceManagerForUsersFixture _fixture;
+        private readonly ServiceManagerFixture _fixture;
         private readonly Faker _faker = new Faker("ru");
 
-        public UserServiceTests(ServiceManagerForUsersFixture fixture)
+        public UserServiceTests(ServiceManagerFixture fixture)
         {
             _fixture = fixture;
             _fixture.Initialize();
+
+            if(_fixture.DbContext.Users.Count() != ServiceManagerFixture.FAKE_ACCOUNTS_COUNT)
+            {
+                throw new InvalidFixtureDataException();
+            }
+
+            if(_fixture.DbContext.Accounts.Count() != ServiceManagerFixture.FAKE_ACCOUNTS_COUNT)
+            {
+                throw new InvalidFixtureDataException();
+            }
         }
 
         public void Dispose()
@@ -32,11 +43,11 @@ namespace OnionApp.Tests.Repositories.Users
         public BusinessServiceManager ServiceManager => _fixture.ServiceManager;
 
         [Fact(DisplayName = "GetAllAsync returns all users when users count > 0")]
-        public async Task GetAllAsync_ReturnsAllUsers_WhenUsersCountGreaterThanZero()
+        public async Task GetAllAsync_ReturnsAllUsers()
         {
             var usersDtos = await ServiceManager.UserService.GetAllAsync();
-
             var users = Db.Users.ToList();
+
             Assert.Equal(users.Count(), usersDtos.Count());
             Assert.All(usersDtos, userDto => Assert.Contains(users, u => u.Id == userDto.Id));
         }
@@ -54,10 +65,10 @@ namespace OnionApp.Tests.Repositories.Users
         }
 
         [Fact(DisplayName = "FindByIdAsync returns user dto with specified ID")]
-        public async Task FindByIdAsync_ReturnsUserDtoWithSpecifiedId()
+        public async Task FindByIdAsync_ReturnsUserDto_WithSpecifiedId()
         {
             var users = (await ServiceManager.UserService.GetAllAsync()).ToArray();
-            int expectedUserIndex = _rnd.Next(users.Length);
+            int expectedUserIndex = _faker.Random.Int(0, users.Length - 1);
             var expectedUser = users[expectedUserIndex];
 
             var user = await ServiceManager.UserService.FindByIdAsync(expectedUser.Id);
@@ -67,7 +78,7 @@ namespace OnionApp.Tests.Repositories.Users
         }
 
         [Fact(DisplayName = "FindByIdAsync returns null when there is no user with specified id")]
-        public async Task FindByIdAsync_ReturnsNullWhenThereIsNoUserWithSpecifiedId()
+        public async Task FindByIdAsync_ReturnsNull_WhenThereIsNoUserWithSpecifiedId()
         {
             Guid unexistingUserId = Guid.NewGuid();
             var users = (await ServiceManager.UserService.GetAllAsync()).ToArray();
@@ -91,7 +102,7 @@ namespace OnionApp.Tests.Repositories.Users
 
             string newFirstName = Guid.NewGuid().ToString();
             string newLastName = Guid.NewGuid().ToString();
-            DateTime newBirthDate = _faker.Date.Past(2);
+            var newBirthDate = _faker.Date.Past(2);
 
             UserDto userDto = usersDto.First();
             userDto.FirstName = newFirstName;
@@ -101,12 +112,32 @@ namespace OnionApp.Tests.Repositories.Users
             Guid userId = userDto.Id;
 
             UserDto newUserDto = await ServiceManager.UserService.UpdateAsync(userDto.Id, userDto);
+            await ServiceManager.SaveChangesAsync();
 
             Assert.NotNull(newUserDto);
             Assert.Equal(userId, newUserDto.Id);
             Assert.Equal(newFirstName, newUserDto.FirstName);
             Assert.Equal(newLastName, newUserDto.LastName);
             Assert.Equal(newBirthDate, newUserDto.DateOfBirth);
+        }
+
+        [Fact(DisplayName = "UpdateAsync throws exception if user ID is invalid")]
+        public async Task UpdateAsync_ThrowsException_IfUserIdIsInvalid()
+        {
+            var usersIds = (await ServiceManager.UserService.GetAllAsync())
+                .Select(u => u.Id)
+                .ToArray();
+
+            Guid invalidUserId = Guid.NewGuid();
+            while(usersIds.Contains(invalidUserId))
+            {
+                invalidUserId = Guid.NewGuid();
+            }
+
+            var usersDto = new UserDto { Id = invalidUserId };
+
+            await Assert.ThrowsAsync<UserNotFoundException>(async () => 
+                await ServiceManager.UserService.UpdateAsync(invalidUserId, usersDto));
         }
 
         [Fact(DisplayName = "DeleteAsync removes and returns removed user id")]
@@ -120,6 +151,7 @@ namespace OnionApp.Tests.Repositories.Users
             Guid userId = userDto.Id;
 
             var deleteUser = await ServiceManager.UserService.DeleteAsync(userId);
+            await ServiceManager.SaveChangesAsync();
 
             Assert.NotNull(deleteUser);
             Assert.Equal(userId, deleteUser!.Id);

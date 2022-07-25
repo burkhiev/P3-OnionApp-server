@@ -8,7 +8,7 @@ namespace AppService.Services
         private readonly Lazy<IUserService> _lazyUserService;
         private readonly Lazy<IAccountService> _lazyAccountService;
         private readonly IRepositoryManager _repositoryManager;
-        private bool disposedValue;
+        //private bool disposedValue;
 
         public BusinessServiceManager(IRepositoryManager repositoryManager)
         {
@@ -23,25 +23,6 @@ namespace AppService.Services
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             return _repositoryManager.SaveChangesAsync(cancellationToken);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if(!disposedValue)
-            {
-                if(disposing)
-                {
-                    _repositoryManager.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

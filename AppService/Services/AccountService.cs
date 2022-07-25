@@ -5,6 +5,7 @@ using AppService.Abstractions;
 using AppService.Dtos.Accounts;
 using AppService.Mappers;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace AppService.Services
 {
@@ -13,35 +14,56 @@ namespace AppService.Services
         private const int MAX_ID_GENEREATION_ATTEMPT_COUNT = 5;
         private IRepositoryManager _repositoryManager;
         private IMapper _mapper;
+        private MapperConfiguration _mapperConfig;
 
         public AccountService(IRepositoryManager repositoryManager)
         {
             _repositoryManager = repositoryManager;
             _mapper = MapperService.Mapper;
+            _mapperConfig = MapperService.MapperConfiguration;
         }
 
-        public async Task<IEnumerable<AccountDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IQueryable<AccountDto>> GetAllAsync(CancellationToken ct = default)
         {
             var accounts = _repositoryManager.AccountRepository.GetAll();
-            var accountsDtos = _mapper.Map<IEnumerable<AccountDto>>(accounts);
+            var accountsDtos = accounts.ProjectTo<AccountDto>(_mapperConfig);
             return accountsDtos;
         }
 
-        public async Task<AccountDto?> FindByIdAsync(Guid accountId, CancellationToken cancellationToken = default)
+        public async Task<AccountDto?> FindByIdAsync(Guid accountId, CancellationToken ct = default)
         {
-            var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, cancellationToken);
+            var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, ct);
             var accountDto = account is null ? null : _mapper.Map<AccountDto>(account);
             return accountDto;
         }
 
-        public async Task<AccountDto> CreateAsync(AccountCreatingDto accountDto, CancellationToken cancellationToken = default)
+        public async Task<AccountDto> CreateAsync(AccountCreatingDto accountDto, CancellationToken ct = default)
         {
+            var accountData = _mapper.Map<Account>(accountDto);
+            var accountId = Guid.NewGuid();
+
+            for(int i = 0; i < MAX_ID_GENEREATION_ATTEMPT_COUNT; i++)
+            {
+                var result = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, ct);
+
+                if(result is null)
+                {
+                    break;
+                }
+
+                accountId = Guid.NewGuid();
+            }
+
+            accountData.Id = accountId;
+            var account = await _repositoryManager.AccountRepository.AddAsync(accountData, ct);
+
+
             var userData = _mapper.Map<User>(accountDto);
             var userId = Guid.NewGuid();
 
             for(int i = 0; i < MAX_ID_GENEREATION_ATTEMPT_COUNT; i++)
             {
-                var result = await _repositoryManager.UsersRepository.FindByIdAsync(userId, cancellationToken);
+                var result = await _repositoryManager.UsersRepository.FindByIdAsync(userId, ct);
 
                 if (result is null)
                 {
@@ -52,36 +74,22 @@ namespace AppService.Services
             }
 
             userData.Id = userId;
-            var user = await _repositoryManager.UsersRepository.AddAsync(userData, cancellationToken);
+            userData.AccountId = account.Id;
+            var user = await _repositoryManager.UsersRepository.AddAsync(userData, ct);
 
-            var account = _mapper.Map<Account>(accountDto);
-            var accountId = Guid.NewGuid();
 
-            for(int i = 0; i < MAX_ID_GENEREATION_ATTEMPT_COUNT; i++)
-            {
-                var result = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, cancellationToken);
-
-                if(result is null)
-                {
-                    break;
-                }
-
-                accountId = Guid.NewGuid();
-            }
-
-            account.Id = accountId;
-            account.UserId = user.Id;
-
-            Account newAccount = await _repositoryManager.AccountRepository.AddAsync(account, cancellationToken);
-            await _repositoryManager.SaveChangesAsync(cancellationToken);
-
-            var createdAccountDto = _mapper.Map<AccountDto>(newAccount);
+            var createdAccountDto = _mapper.Map<AccountDto>(account);
             return createdAccountDto;
         }
 
-        public async Task<AccountDto> UpdateAsync(Guid accountId, AccountUpdatingDto accountDto, CancellationToken cancellationToken = default)
+        public async Task<AccountDto> UpdateAsync(Guid accountId, AccountUpdatingDto accountDto, CancellationToken ct = default)
         {
-            var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, cancellationToken);
+            if(accountId == Guid.Empty || accountDto.AccountId != accountId)
+            {
+                throw new AccountInvalidArgumentForUpdateException(accountId);
+            }
+
+            var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, ct);
 
             if(account == null)
             {
@@ -99,15 +107,14 @@ namespace AppService.Services
             }
 
             var newAccount = _repositoryManager.AccountRepository.Update(account);
-            await _repositoryManager.SaveChangesAsync(cancellationToken);
 
             var newAccountDto = _mapper.Map<AccountDto>(newAccount);
             return newAccountDto;
         }
 
-        public async Task<AccountDto?> DeleteAsync(Guid accountId, CancellationToken cancellationToken = default)
+        public async Task<AccountDto?> DeleteAsync(Guid accountId, CancellationToken ct = default)
         {
-            var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, cancellationToken);
+            var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId, ct);
 
             if(account == null)
             {
@@ -115,10 +122,28 @@ namespace AppService.Services
             }
 
             var deletedAccount = _repositoryManager.AccountRepository.Remove(account);
-            await _repositoryManager.SaveChangesAsync(cancellationToken);
 
             var accountDto = _mapper.Map<AccountDto>(deletedAccount);
             return accountDto;
+        }
+
+        public async Task DeleteRangeAsync(Guid[] accountsIds, CancellationToken ct = default)
+        {
+            var accounts = _repositoryManager.AccountRepository.GetAll();
+            _repositoryManager.AccountRepository.RemoveRange(accounts.ToArray());
+        }
+
+        public async Task<AccountFullDtoWithoutIncludes> FindByIdFullWithoutIncludes(Guid accountId, CancellationToken ct = default)
+        {
+            var account = await _repositoryManager.AccountRepository.FindByIdAsync(accountId);
+
+            if(account is null)
+            {
+                throw new AccountNotFoundException(accountId);
+            }
+
+            var accountWithDetailsDto = _mapper.Map<AccountFullDtoWithoutIncludes>(account);
+            return accountWithDetailsDto;
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace AppService.Dtos.Users
 {
-    public sealed class UserDto
+    public sealed class UserDto : DtoBase
     {
         public Guid Id { get; set; } = Guid.Empty;
         public string FirstName { get; set; } = string.Empty;

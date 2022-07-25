@@ -5,23 +5,27 @@ using AppService.Abstractions;
 using AppService.Dtos.Users;
 using AppService.Mappers;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace AppService.Services
 {
     internal sealed class UserService : IUserService
     {
         private readonly IRepositoryManager _repositoryManager;
-        private readonly IMapper _mapper = MapperService.Mapper;
+        private readonly IMapper _mapper;
+        private readonly MapperConfiguration _mapperConfig;
 
         public UserService(IRepositoryManager repositoryManager)
         {
             _repositoryManager = repositoryManager;
+            _mapper = MapperService.Mapper;
+            _mapperConfig = MapperService.MapperConfiguration;
         }
 
-        public async Task<IEnumerable<UserDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IQueryable<UserDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var users = _repositoryManager.UsersRepository.GetAll();
-            var usersDtos = _mapper.Map<IEnumerable<UserDto>>(users);
+            var usersDtos = users.ProjectTo<UserDto>(_mapperConfig);
             return usersDtos;
         }
 
@@ -34,6 +38,11 @@ namespace AppService.Services
 
         public async Task<UserDto> UpdateAsync(Guid userId, UserDto userDto, CancellationToken cancellationToken)
         {
+            if(userId != userDto.Id)
+            {
+                throw new UserUpdateInvalidArgumentException(nameof(userId), userId);
+            }
+
             var user = await _repositoryManager.UsersRepository.FindByIdAsync(userId);
 
             if(user == null)
@@ -44,7 +53,6 @@ namespace AppService.Services
             _mapper.Map(userDto, user);
 
             User updatedUser = _repositoryManager.UsersRepository.Update(user);
-            await _repositoryManager.SaveChangesAsync();
 
             var result = _mapper.Map<UserDto>(updatedUser);
             return result;
@@ -61,7 +69,6 @@ namespace AppService.Services
 
             var removedUser = _repositoryManager.UsersRepository.Remove(user);
             int saveResult = await _repositoryManager.SaveChangesAsync(cancellationToken);
-            await _repositoryManager.SaveChangesAsync();
 
             if(saveResult == 0)
             {
@@ -71,6 +78,12 @@ namespace AppService.Services
 
             var result = _mapper.Map<UserDto>(user);
             return result;
+        }
+
+        public async Task DeleteRangeAsync(Guid[] usersIds, CancellationToken cancellationToken = default)
+        {
+            var users = _repositoryManager.UsersRepository.GetAll();
+            _repositoryManager.UsersRepository.RemoveRange(users.ToArray());
         }
     }
 }

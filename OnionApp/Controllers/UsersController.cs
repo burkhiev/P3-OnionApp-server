@@ -1,53 +1,76 @@
 ﻿using AppService.Abstractions;
 using AppService.Dtos.Users;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using OnionApp.Filters;
+using OnionApp.Utilities.ResponseTypes;
+using System.Net.Mime;
 
 namespace OnionApp.Controllers
 {
     [ApiController]
     [Route("api/users")]
+    [ProducesResponseType(typeof(ClientErrorResponse), StatusCodes.Status400BadRequest, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(ClientErrorResponse), StatusCodes.Status500InternalServerError, MediaTypeNames.Application.Json)]
     public class UsersController : Controller
     {
         private readonly IBusinessServiceManager _serviceManager;
-        private readonly IValidator<UserDto> _userDtoValidator;
 
-        public UsersController(IBusinessServiceManager serviceManager, IValidator<UserDto> userDtoValidator)
+        public UsersController(IBusinessServiceManager serviceManager)
         {
             _serviceManager = serviceManager;
-            _userDtoValidator = userDtoValidator;
         }
 
+        /// <summary>
+        /// Returns all users.
+        /// </summary>
+        /// <returns>All users' data.</returns>
         [HttpGet]
-        public async Task<IActionResult> GetUsers(CancellationToken cancellationToken = default)
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+        public async Task<IActionResult> GetUsersAsync()
         {
-            var usersDtos = await _serviceManager.UserService.GetAllAsync(cancellationToken);
+            var qUsersDtos = await _serviceManager.UserService.GetAllAsync();
+            var usersDtos = qUsersDtos.ToList();
 
             return Ok(usersDtos);
         }
 
+        /// <summary>
+        /// Returns user with specified ID.
+        /// </summary>
+        /// <param name="userId">User ID (Guid).</param>
+        /// <returns>Specified ID user's data.</returns>
+        /// <response code="404">Not Found. If user with specified ID doesn't exist.</response>
         [HttpGet("{userId:guid}")]
-        public async Task<IActionResult> GetUserById(Guid userId, CancellationToken cancellationToken = default)
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(NotFoundResult), StatusCodes.Status404NotFound, MediaTypeNames.Text.Plain)]
+        public async Task<IActionResult> GetUserByIdAsync(Guid userId)
         {
-            var userDto = await _serviceManager.UserService.FindByIdAsync(userId, cancellationToken);
+            var userDto = await _serviceManager.UserService.FindByIdAsync(userId);
+
+            if(userDto is null)
+            {
+                return NotFound();
+            }
 
             return Ok(userDto);
         }
 
+        /// <summary>
+        /// Updates user.
+        /// </summary>
+        /// <param name="userId">User ID (Guid).</param>
+        /// <param name="userDto">Object which contain user's data for update.</param>
+        /// <returns>Updated user's data.</returns>
+        /// <response code="400">WTF</response>
         [HttpPut("{userId:guid}")]
-        public async Task<IActionResult> UpdateUser(Guid userId, [FromBody] UserDto userDto, CancellationToken cancellationToken = default)
+        [TypeFilter(typeof(UserDtosValidationFilterAttribute))]
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+        public async Task<IActionResult> UpdateUserAsync(Guid userId, [FromBody] UserDto userDto)
         {
-            await _serviceManager.UserService.UpdateAsync(userId, userDto, cancellationToken);
+            var resultUserDto = await _serviceManager.UserService.UpdateAsync(userId, userDto);
+            await _serviceManager.SaveChangesAsync();
 
-            return NoContent();
-        }
-
-        [HttpDelete("{userId:guid}")]
-        public async Task<IActionResult> DeleteUserById(Guid userId, CancellationToken cancellationToken = default)
-        {
-            await _serviceManager.UserService.DeleteAsync(userId, cancellationToken);
-
-            return NoContent();
+            return Ok(resultUserDto);
         }
     }
 }
