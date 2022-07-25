@@ -1,4 +1,4 @@
-# OnionApp
+# Project 3 OnionApp
 
 ### Описание:
 Простой сервер
